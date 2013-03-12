@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from Crypto.Cipher import AES
-from PIL import Image, ImageTk
+import Image
 import base64
 from ast import literal_eval
 from getpass import getpass
 from glob import glob
-import Tkinter
+import argparse
 import os, sys
 
 class Encryption:
@@ -33,10 +33,11 @@ class Pix:
         self.encryption = Encryption(cipherkey)
     
     def encrypt(self, filename):
+	print 'Encrypting %s as %s.aes' % (filename, filename.split('.')[0])
         im = Image.open(filename)
         data = im.tostring()
         edata = self.encryption.encrypt(data)
-        f = open('encrypt_%s.aes' % filename.split('.')[0], 'wb')
+        f = open('%s.aes' % filename.split('.')[0], 'wb')
         f.write('%s %s\n' % (im.mode, im.size))
         f.write(edata)
         f.close()
@@ -50,42 +51,35 @@ class Pix:
         new_im = Image.fromstring(mode, size, image)
         return new_im
 
-def button_click_exit_mainloop (event):
-    event.widget.quit() # this will cause mainloop to unblock.
-    
-def image(key):
-    pcrypt = Pix(key)
-    if os.path.exists(sys.argv[2]):
-        if sys.argv[1] == 'encrypt':
-            pcrypt.encrypt(sys.argv[2])
-        elif sys.argv[1] == 'decrypt':
-            im = pcrypt.decrypt(sys.argv[2])
-            im.show()
-    else:
-        raise Exception('%s does not exists' % sys.argv[1])
+def main():
 
-def main(key):
+    # Simple Parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--show', action="store_true", dest="show",
+                    default=False,
+                    help='Show encrypted AES Images in current directory')
+    parser.add_argument('--encrypt', action="store_true", dest="encrypt",
+                    default=False,
+                    help='Encrypt Images in current directory')
+    args = parser.parse_args()
+
+    # Get our cipher key
+    key = getpass(prompt='Enter Cipherkey: ')
     pcrypt = Pix(key)
-  
-    # build the Tkinter GUI window
-    root = Tkinter.Tk()
-    root.bind("<Button>", button_click_exit_mainloop)
-    old_label_image = None
-    for filename in glob('*.aes'):
-        image1 = pcrypt.decrypt(filename)
-        root.geometry('%dx%d' % (image1.size[0],image1.size[1]))
-        tkpi = ImageTk.PhotoImage(image1)
-        label_image = Tkinter.Label(root, image=tkpi)
-        label_image.place(x=0,y=0,width=image1.size[0],height=image1.size[1])
-        root.title(filename)
-        if old_label_image is not None:
-            old_label_image.destroy()
-        old_label_image = label_image
-        root.mainloop()
+
+    # Encrypt all images
+    if args.encrypt:
+	types = ('png', 'jpg', 'jpeg')
+        files = [ f for f in glob('*.*') if f.split('.')[1] in types ]	
+	for filename in files:
+            pcrypt.encrypt(filename)
+
+    # Show all images
+    if args.show:
+        for filename in glob('*.aes'):
+	    image = pcrypt.decrypt(filename)
+	    image.show()
+
     
 if __name__ == '__main__':
-    key = getpass(prompt='Enter Cipherkey: ')
-    if len(sys.argv) == 3:
-        image(key)
-    else:
-        main(key)
+    main()
