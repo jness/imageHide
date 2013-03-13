@@ -5,7 +5,8 @@ from binascii import hexlify
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 
-import Image
+import Tkinter
+import Image, ImageTk
 import cStringIO
 from getpass import getpass
 from glob import glob
@@ -43,25 +44,8 @@ class Encryption:
         
         aes = AES.new(key, AES.MODE_CBC, iv)
         clear = aes.decrypt(self.data)
-        f = open('test.jpg', 'wb')
-        f.write(clear)
-        f.close()
         return clear
     
-class Pix:
-    '''A Class for encrypting and decrypting Images'''
-    def __init__(self, cipherkey):
-        self.encryption = Encryption(cipherkey)
-    
-    def decrypt(self, filename):
-        f = open(filename, 'rb')
-        data = f.read()
-        clear = self.encryption.decrypt(data)
-        fileobj = cStringIO.StringIO(clear)
-        im = Image.open(fileobj)
-        return im
-    
-
 def main():
 
     # Simple Parser
@@ -71,13 +55,28 @@ def main():
 
     # Get our cipher key
     key = getpass(prompt='Enter Cipherkey: ')
-    pcrypt = Pix(key)
+    encryption = Encryption(key)
 
     # Show all images
     if args.show:
         for filename in args.show:
-            image = pcrypt.decrypt(filename)
-            image.show()
+	
+	    # open our encrypted file 
+	    f = open(filename, 'rb')
+	    data = f.read()
+	    f.close()
+
+	    # decrypt and create file obj from memory
+            clear = encryption.decrypt(data)
+	    fileobj = cStringIO.StringIO(clear)
+
+	    im = Image.open(fileobj)
+	    im = im.resize((im.size[0]/3, im.size[1]/3), Image.ANTIALIAS)
+	    root = Tkinter.Tk() 
+   	    tkimage = ImageTk.PhotoImage(im)
+	    Tkinter.Label(root, image=tkimage).pack()
+
+	    root.mainloop()	
 
     
 if __name__ == '__main__':

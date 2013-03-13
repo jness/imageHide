@@ -3,3 +3,6 @@
 *.jpg
 *.png
 *.aes
+*egg*
+build
+dist
