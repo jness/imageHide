@@ -55,8 +55,8 @@ def main():
 
     # Simple Parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--encrypt', help='Encrypt a file')
-    parser.add_argument('--show', help='Show an encrypted a file')
+    parser.add_argument('--encrypt', nargs='+', help='Encrypt a file')
+    parser.add_argument('--show', nargs='+', help='Show an encrypted a file')
     args = parser.parse_args()
 
     # Get our cipher key
@@ -65,17 +65,12 @@ def main():
 
     # Encrypt all images
     if args.encrypt:
-        types = ('png', 'jpg', 'jpeg')
-        files = [ f for f in glob(args.encrypt) if f.split('.')[1] in types ]
-        if files:
-            for filename in files:
-                pcrypt.encrypt(filename)
-        else:
-            print '%s does not match our types:\n ' % args.encrypt + str(types)
+        for filename in args.encrypt:
+            pcrypt.encrypt(filename)
 
     # Show all images
     if args.show:
-        for filename in glob(args.show):
+        for filename in args.show:
             image = pcrypt.decrypt(filename)
             image.show()
 
