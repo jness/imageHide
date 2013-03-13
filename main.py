@@ -33,7 +33,7 @@ class Pix:
         self.encryption = Encryption(cipherkey)
     
     def encrypt(self, filename):
-	print 'Encrypting %s as %s.aes' % (filename, filename.split('.')[0])
+        print 'Encrypting %s as %s.aes' % (filename, filename.split('.')[0])
         im = Image.open(filename)
         data = im.tostring()
         edata = self.encryption.encrypt(data)
@@ -55,12 +55,8 @@ def main():
 
     # Simple Parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--show', action="store_true", dest="show",
-                    default=False,
-                    help='Show encrypted AES Images in current directory')
-    parser.add_argument('--encrypt', action="store_true", dest="encrypt",
-                    default=False,
-                    help='Encrypt Images in current directory')
+    parser.add_argument('--encrypt', help='Encrypt a file')
+    parser.add_argument('--show', help='Show an encrypted a file')
     args = parser.parse_args()
 
     # Get our cipher key
@@ -69,16 +65,19 @@ def main():
 
     # Encrypt all images
     if args.encrypt:
-	types = ('png', 'jpg', 'jpeg')
-        files = [ f for f in glob('*.*') if f.split('.')[1] in types ]	
-	for filename in files:
-            pcrypt.encrypt(filename)
+        types = ('png', 'jpg', 'jpeg')
+        files = [ f for f in glob(args.encrypt) if f.split('.')[1] in types ]
+        if files:
+            for filename in files:
+                pcrypt.encrypt(filename)
+        else:
+            print '%s does not match our types:\n ' % args.encrypt + str(types)
 
     # Show all images
     if args.show:
-        for filename in glob('*.aes'):
-	    image = pcrypt.decrypt(filename)
-	    image.show()
+        for filename in glob(args.show):
+            image = pcrypt.decrypt(filename)
+            image.show()
 
     
 if __name__ == '__main__':
